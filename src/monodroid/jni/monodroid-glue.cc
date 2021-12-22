@@ -1049,7 +1049,7 @@ MonodroidRuntime::init_android_runtime (
 #if !defined (NET6)
 	MonoDomain *domain,
 #endif // ndef NET6
-	JNIEnv *env, jclass runtimeClass, jobject loader)
+	JNIEnv *env, jclass runtimeClass, jobject loader, jbyteArray mappingXml, jint mappingXmlLen)
 {
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
@@ -1190,6 +1190,12 @@ MonodroidRuntime::init_android_runtime (
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		partial_time.mark_start ();
 
+	if (mappingXml != nullptr) {
+		init.mappingXml             = env->GetByteArrayElements (mappingXml, nullptr);
+		init.mappingXmlLen          = mappingXmlLen;
+	}
+	log_warn (LOG_DEFAULT, "# jonp: mappingXml? len=%i, xml=%p", init.mappingXmlLen, init.mappingXml);
+
 #if defined (NET6) && defined (ANDROID)
 	MonoError error;
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
@@ -1202,6 +1208,10 @@ MonodroidRuntime::init_android_runtime (
 
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
 #endif // ndef NET6 && ndef ANDROID
+
+	if (init.mappingXml != nullptr) {
+		env->ReleaseByteArrayElements (mappingXml, init.mappingXml, JNI_ABORT);
+	}
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		partial_time.mark_end ();
@@ -1940,7 +1950,7 @@ monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
-												[[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
+												[[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, jbyteArray mappingXml, jint mappingXmlLen, bool is_root_domain,
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
@@ -1968,10 +1978,10 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 
 #if defined (NET6)
 	load_assemblies (default_alc, preload, assemblies);
-	init_android_runtime (env, runtimeClass, loader);
+	init_android_runtime (env, runtimeClass, loader, mappingXml, mappingXmlLen);
 #else // def NET6
 	load_assemblies (domain, preload, assemblies);
-	init_android_runtime (domain, env, runtimeClass, loader);
+	init_android_runtime (domain, env, runtimeClass, loader, mappingXml, mappingXmlLen);
 #endif // ndef NET6
 	osBridge.add_monodroid_domain (domain);
 
@@ -2131,7 +2141,7 @@ MonodroidRuntime::install_logging_handlers ()
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                                          jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                                          jobjectArray assembliesJava, jbyteArray mappingXml, jint mappingXmlLen, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
 	char *mono_log_mask_raw = nullptr;
@@ -2344,7 +2354,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
+	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, mappingXml, mappingXmlLen, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
 
 #if defined (ANDROID) && !defined (NET6)
 	// Mono from mono/mono has a bug which requires us to install the handlers after `mono_init_jit_version` is called
@@ -2422,7 +2432,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
+                                [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, jbyteArray mappingXml, jint mappingXmlLen, [[maybe_unused]] jstring packageName,
                                 jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
@@ -2434,6 +2444,8 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		appDirs,
 		loader,
 		assembliesJava,
+		mappingXml,
+		mappingXmlLen,
 		apiLevel,
 		/* isEmulator */ JNI_FALSE,
 		/* haveSplitApks */ JNI_FALSE
@@ -2443,7 +2455,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                jobjectArray assembliesJava, jbyteArray mappingXml, jint mappingXmlLen, jint apiLevel, jboolean isEmulator,
                                 jboolean haveSplitApks)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
@@ -2455,6 +2467,8 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		appDirs,
 		loader,
 		assembliesJava,
+		mappingXml,
+		mappingXmlLen,
 		apiLevel,
 		isEmulator,
 		haveSplitApks
