@@ -17,10 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #if NET
 using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
-using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
-	(string SourceType, string SourceName, string? SourceSignature),
-	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic)
->;
+using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<string, string>;
 #endif  // NET
 
 namespace Android.Runtime {
@@ -222,7 +219,7 @@ namespace Android.Runtime {
 			if (args->mappingXml != IntPtr.Zero) {
 				var xml = Encoding.UTF8.GetString ((byte*) args->mappingXml, args->mappingXmlLen);
 				Logger.Log (LogLevel.Warn, "*jonp*", $"# jonp: mapping xml: len={args->mappingXmlLen}; {xml}");
-				(ReplacementTypes, ReplacementMethods) = MamXmlParser.Parse (xml);
+				(ReplacementTypes, ReplacementMethods) = MamXmlParser.ParseStrings (xml);
 			}
 #endif  // NET
 
