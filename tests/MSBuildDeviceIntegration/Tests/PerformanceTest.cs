@@ -306,7 +306,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (install) {
 				AssertCommercialBuild (); // This test will fail without Fast Deployment
-				AssertHasDevices ();
 			}
 
 			var path = Path.Combine ("temp", TestName);
@@ -382,7 +381,6 @@ namespace Xamarin.Android.Build.Tests
 		public void Install_CSharp_Change ()
 		{
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
-			AssertHasDevices ();
 
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.install_csharp_change";

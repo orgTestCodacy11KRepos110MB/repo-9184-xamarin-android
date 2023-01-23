@@ -58,15 +58,16 @@ stages:
         artifactName: Build Results - Nightly macOS
         includeBuildResults: true
 
-- stage: test
-  displayName: Test
+
+- stage: test_apk
+  displayName: Test APKs
   dependsOn: mac_build
   variables:
-    - group: Xamarin-Secrets
-    - group: xamops-azdev-secrets
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
   jobs:
-  - job: emulator_tests
-    displayName: macOS > Tests > APKs (Emulator)
+  - job: test_apk_monoandroid
+    displayName: macOS > Test APKs > Mono.Android
     timeoutInMinutes: 180
     strategy:
       matrix:
@@ -158,7 +159,17 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # TimeZoneInfo test jobs
+  - template: yaml-templates/run-systemapp-tests.yaml
+
+
+# TimeZoneInfo test jobs
+- stage: test_timezoneinfo
+  displayName: Test TimeZoneInfo
+  dependsOn: mac_build
+  variables:
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
+  jobs:
   - template: yaml-templates/run-timezoneinfo-tests.yaml
     parameters:
       node_id: 1
@@ -175,7 +186,15 @@ stages:
     parameters:
       node_id: 4
 
-  # Localization test jobs
+
+# Localization test jobs
+- stage: test_locals
+  displayName: Test Localization
+  dependsOn: mac_build
+  variables:
+  - group: Xamarin-Secrets
+  - group: xamops-azdev-secrets
+  jobs:
   - template: yaml-templates/run-localization-tests.yaml
     parameters:
       node_id: 1
@@ -223,5 +242,3 @@ stages:
   - template: yaml-templates/run-localization-tests.yaml
     parameters:
       node_id: 12
-
-  - template: yaml-templates/run-systemapp-tests.yaml

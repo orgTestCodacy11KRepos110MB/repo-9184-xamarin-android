@@ -22,8 +22,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void EnsureUncaughtExceptionWorks ()
 		{
-			AssertHasDevices ();
-
 			var lib = new XamarinAndroidBindingProject {
 				ProjectName = "Scratch.Try",
 				AndroidClassParser = "class-parse",

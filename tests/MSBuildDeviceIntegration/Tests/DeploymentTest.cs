@@ -75,30 +75,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 		}
 
-		[OneTimeTearDown]
-		public void AfterDeploymentTests ()
+		[SetUp]
+		public void DeploymentTesetSetUp ()
 		{
-			if (HasDevices && proj != null)
-				RunAdbCommand ($"uninstall {proj.PackageName}");
-
-			if (builder != null)
-				return;
-
-			string output = Path.Combine (Root, builder.ProjectDirectory);
-			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (output)) {
-				Directory.Delete (output, recursive: true);
-				return;
-			}
-
-			foreach (var file in Directory.GetFiles (output, "*.log", SearchOption.AllDirectories)) {
-				TestContext.AddTestAttachment (file, Path.GetFileName (output));
-			}
+			Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (), $"{proj.PackageName} was not installed!");
 		}
 
 		[Test]
 		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
 		{
-			AssertHasDevices ();
 			AssertAaptSupported (useAapt2);
 
 			var library = new XamarinAndroidLibraryProject () {
@@ -203,8 +188,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
 		{
-			AssertHasDevices ();
-
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
@@ -264,8 +247,6 @@ namespace Xamarin.Android.Build.Tests
 
 		public void CheckTimeZoneInfoIsCorrect (string timeZone)
 		{
-			AssertHasDevices ();
-
 			string currentTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
 			string deviceTz = string.Empty;
 			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log");
@@ -336,70 +317,67 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 0 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode1 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 1 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode2 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 2 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode3 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 3 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode4 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 4 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode5 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 5 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode6 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 6 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode7 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 7 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode8 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 8 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode9 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		[Test]
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 9 })]
 		[Category ("Localization")]
-		[Retry (2)]
 		public void CheckLocalizationIsCorrectNode10 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 10 })]
+		[Category ("Localization")]
+		public void CheckLocalizationIsCorrectNode11 (string locale) => CheckLocalizationIsCorrect (locale);
+
+		[Test]
+		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 11 })]
+		[Category ("Localization")]
+		public void CheckLocalizationIsCorrectNode12 (string locale) => CheckLocalizationIsCorrect (locale);
 
 		public void CheckLocalizationIsCorrect (string locale)
 		{
-			AssertHasDevices ();
-
-			string currentLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
-			TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Current Locale is {currentLocale}");
-			string deviceLocale = currentLocale;
+			string deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
+			TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Current Locale is {deviceLocale}");
 			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
 			string monitorLogFile = Path.Combine (Root, builder.ProjectDirectory, $"monitor-logcat-{locale.Replace ("/", "-")}.log");
 			try {
@@ -407,15 +385,8 @@ namespace Xamarin.Android.Build.Tests
 				if (deviceLocale != locale) {
 					for (int attempt = 0; attempt < 5; attempt++) {
 						TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: attempt {attempt}");
-						RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
-						RunAdbCommand ("shell su root setprop ctl.restart zygote");
-						if (!MonitorAdbLogcat ((l) => {
-							if (l.Contains ("Finished processing BOOT_COMPLETED for"))
-								return true;
-							return false;
-						}, monitorLogFile, timeout:60)) {
-							TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
-						}
+						// https://developer.android.com/guide/topics/resources/localization#changing-the-emulator-locale-from-the-adb-shell
+						RunAdbCommand ($"shell \"su root setprop persist.sys.locale {locale};su root stop;sleep 5;su root start;\"");
 						WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 						deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 						if (deviceLocale == locale) {
@@ -447,23 +418,6 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
 				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
-				if (!string.IsNullOrEmpty (currentLocale)) {
-					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale back to {currentLocale}");
-					RunAdbCommand ($"shell su root setprop persist.sys.locale \"{currentLocale}\"");
-					RunAdbCommand ("shell su root setprop ctl.restart zygote");
-					MonitorAdbLogcat ((l) => {
-						if (l.Contains ("Finished processing BOOT_COMPLETED for"))
-							return true;
-						return false;
-					}, monitorLogFile, timeout:60);
-					WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
-				}
-				if (File.Exists (logFile)) {
-					TestContext.AddTestAttachment (logFile);
-				}
-				if (File.Exists (monitorLogFile)) {
-					TestContext.AddTestAttachment (monitorLogFile);
-				}
 			}
 		}
 	}

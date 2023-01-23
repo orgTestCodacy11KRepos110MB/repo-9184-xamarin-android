@@ -17,20 +17,13 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public const string GuestUserName = "guest1";
 
-		protected bool HasDevices {
-			get {
-				string output = RunAdbCommand ("shell echo OK");
-				return output.Contains ("OK");
-			}
-		}
-
 		/// <summary>
 		/// Checks if there is a device available
 		/// * Defaults to Assert.Fail ()
 		/// </summary>
 		public void AssertHasDevices (bool fail = true)
 		{
-			if (!HasDevices) {
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				var message = "This test requires an attached device or emulator.";
 				if (fail) {
 					Assert.Fail (message);
@@ -47,34 +40,39 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void DeviceSetup ()
 		{
-			SetAdbLogcatBufferSize (64);
-			RunAdbCommand ("logcat -c");
-			CreateGuestUser (GuestUserName);
+			if (IsDeviceAttached ()) {
+				ClearAdbLogcat ();
+				SetAdbLogcatBufferSize (64);
+				CreateGuestUser (GuestUserName);
+			}
 		}
 
 		[OneTimeTearDown]
 		public void DeviceTearDown ()
 		{
-			// make sure we are not on a guest user anymore.
-			SwitchUser ();
-			DeleteGuestUser(GuestUserName);
+			if (IsDeviceAttached ()) {
+				// make sure we are not on a guest user anymore.
+				SwitchUser ();
+				DeleteGuestUser(GuestUserName);
+			}
 		}
 
 		[SetUp]
 		public void CheckDevice ()
 		{
-			if (!HasDevices) {
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				// something went wrong with the emulator.
 				// lets restart it.
 				TestContext.Out.WriteLine ($"{nameof(CheckDevice)} is restarting the emulator.");
-				RestartDevice (Path.Combine (Root, "Emulator.csproj"));
+				RestartDevice (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Emulator.csproj"));
+				AssertHasDevices ();
 			}
 		}
 
 		[TearDown]
 		protected override void CleanupTest ()
 		{
-			if (HasDevices && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed &&
+			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && IsDeviceAttached () &&
 					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
 				Directory.CreateDirectory (outputDir);
 				string local = Path.Combine (outputDir, "screenshot.png");
@@ -120,10 +118,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			TestContext.Out.WriteLine ($"Trying to restart Emulator");
 			// shell out to msbuild and start the emulator again
-			using (var builder = new Builder ()) {
-				var out1 = RunProcessWithExitCode (builder.BuildTool, $"{(Builder.UseDotNet ? "build" : "")} {project} /restore /t:AcquireAndroidTarget", timeoutInSeconds: 120);
-				TestContext.Out.WriteLine ($"{out1}");
-			}
+			var dotnet = new DotNetCLI (project);
+			Assert.IsTrue (dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false" }), "Failed to acquire emulator.");
+			WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 		}
 
 		protected static void RunAdbInput (string command, params object [] args)

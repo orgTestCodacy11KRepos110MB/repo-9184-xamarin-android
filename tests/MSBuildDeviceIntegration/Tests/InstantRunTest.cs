@@ -14,7 +14,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstantRunSimpleBuild ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -49,7 +48,6 @@ namespace Xamarin.Android.Build.Tests
 		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -126,7 +124,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SimpleInstallAndUninstall ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -143,7 +140,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SkipFastDevAlreadyInstalledFile ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -183,7 +179,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SkipFastDevAlreadyInstalledResources (Package [] packages, string baseActivityClass)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -214,7 +209,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstantRunResourceChange ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -247,7 +241,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstantRunFastDevTypemaps ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -273,7 +266,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstantRunNativeLibrary ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var nativeLib = new AndroidItem.AndroidNativeLibrary ($"foo\\{DeviceAbi}\\libtest.so") {
 				BinaryContent = () => new byte [10],
@@ -316,7 +308,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstantRunFastDevDexes ([Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",

@@ -32,7 +32,6 @@ namespace Xamarin.Android.Build.Tests
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -61,7 +60,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstallAndUnInstall ([Values (false, true)] bool isRelease)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -95,7 +93,6 @@ namespace Xamarin.Android.Build.Tests
 		public void ChangeKeystoreRedeploy ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageName = "com.xamarin.keytest"
@@ -125,7 +122,6 @@ namespace Xamarin.Android.Build.Tests
 		public void SwitchConfigurationsShouldRedeploy ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
@@ -171,7 +167,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstallWithoutSharedRuntime ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -229,7 +224,6 @@ namespace Xamarin.Android.Build.Tests
 		public void InstallErrorCode ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
@@ -252,7 +246,6 @@ namespace Xamarin.Android.Build.Tests
 		public void ToggleFastDev ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
@@ -294,7 +287,6 @@ namespace Xamarin.Android.Build.Tests
 		public void LoggingPropsShouldCreateOverrideDirForRelease ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -326,7 +318,6 @@ namespace Xamarin.Android.Build.Tests
 		public void BlankAdbTarget ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject () {
@@ -378,7 +369,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
 		{
-			AssertHasDevices ();
 			if (DeviceSdkVersion >= 30 && !useApkSigner && packageFormat == "apk") {
 				Assert.Ignore ($"Test Skipped. jarsigner and {packageFormat} does not work with API 30 and above");
 				return;
@@ -445,7 +435,6 @@ namespace Xamarin.Android.Build.Tests
 		public void LocalizedAssemblies_ShouldBeFastDeployed ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
@@ -484,7 +473,6 @@ namespace Xamarin.Android.Build.Tests
 		public void IncrementalFastDeployment ()
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 
 			var class1src = new BuildItem.Source ("Class1.cs") {
 				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 0; } }"
@@ -577,8 +565,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AdbTargetChangesAppBundle ()
 		{
-			AssertHasDevices ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};

@@ -13,7 +13,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice"), Category ("Node-1")]
-	public class MonoAndroidExportTest : DeviceTest {
+	public class MonoAndroidExportTest : DeviceTest
+	{
 #pragma warning disable 414
 		static object [] MonoAndroidExportTestCases = new object [] {
 			new object[] {
@@ -49,7 +50,6 @@ namespace Xamarin.Android.Build.Tests
 		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType, bool isRelease)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {

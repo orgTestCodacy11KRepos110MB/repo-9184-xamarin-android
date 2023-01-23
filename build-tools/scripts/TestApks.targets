@@ -21,6 +21,7 @@
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' and '$(HostOS)' == 'Darwin' and  '$(HostOSArchitecture)' == 'Arm64' ">arm64-v8a</TestAvdAbi>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
     <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
+    <TestAvdForceCreation Condition=" '$(TestAvdForceCreation)' == '' ">true</TestAvdForceCreation>
     <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_4</TestDeviceName>
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
@@ -56,7 +57,7 @@
       <Output TaskParameter="IsValidTarget" PropertyName="_ValidAdbTarget"  />
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
-        Condition=" '$(_ValidAdbTarget)' != 'True' "
+        Condition=" '$(_ValidAdbTarget)' != 'True' and ( '$(TestAvdForceCreation)' == 'true' or !Exists('$(AvdManagerHome)\.android\avd\$(TestAvdName).avd') ) "
         AndroidAbi="$(TestAvdAbi)"
         AvdManagerHome="$(AvdManagerHome)"
         JavaSdkHome="$(JavaSdkDirectory)"
@@ -124,6 +125,9 @@
   </Target>
 
   <Target Name="ReleaseAndroidTarget">
+    <PropertyGroup>
+      <_EmuTarget Condition=" '$(_EmuTarget)' == '' ">-s emulator-$(_AdbEmulatorPort)</_EmuTarget>
+    </PropertyGroup>
     <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition="'@(_FailedComponent)' != ''"
         ContinueOnError="ErrorAndContinue"
@@ -141,7 +145,7 @@
         Timeout="60000"
     />
     <KillProcess
-        Condition=" '$(_EmuTarget)' != '' "
+        Condition=" '$(_EmuPid)' != '' "
         ContinueOnError="ErrorAndContinue"
         ProcessId="$(_EmuPid)"
     />

@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		public void Teardown ()
 		{
-			if (HasDevices && proj != null)
+			if (IsDeviceAttached () && proj != null)
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 
 			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed
@@ -31,8 +31,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
 			proj = new XamarinAndroidApplicationProject () {
@@ -62,8 +60,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void SubscribeToAppDomainUnhandledException ()
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -142,8 +138,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test, Category ("MonoSymbolicate")]
 		public void MonoSymbolicateAndroidStackTrace ()
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -182,7 +176,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Category ("UsesDevice"), Category ("SmokeTests")]
 		public void SmokeTestBuildAndRunWithSpecialCharacters ()
 		{
-			AssertHasDevices ();
 			var testName = "テスト";
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -204,8 +197,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test, Category ("MonoSymbolicate")]
 		public void MonoSymbolicateNetStandardStackTrace ()
 		{
-			AssertHasDevices ();
-
 			var lib = new DotNetStandard {
 				ProjectName = "Library1",
 				Sdk = "Microsoft.NET.Sdk",
@@ -291,7 +282,6 @@ namespace Library1 {
 		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
 		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
 		{
-			AssertHasDevices ();
 			AssertCommercialBuild ();
 
 			proj = new XamarinAndroidApplicationProject () {
@@ -333,8 +323,6 @@ namespace Library1 {
 		[Test]
 		public void CustomLinkDescriptionPreserve ([Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode)
 		{
-			AssertHasDevices ();
-
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				Sources = {
@@ -505,8 +493,6 @@ namespace Library1 {
 		[Test]
 		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -630,8 +616,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
@@ -681,8 +665,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void RunWithLLVMEnabled ()
 		{
-			AssertHasDevices ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -709,8 +691,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android33.0")] string dotnetTargetFramework)
 		{
-			AssertHasDevices ();
-
 			string path = Path.Combine (Root, "temp", TestName);
 
 			if (!Builder.UseDotNet) {
@@ -766,8 +746,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void SingleProject_ApplicationId ()
 		{
-			AssertHasDevices ();
-
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 
@@ -791,8 +769,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void AppWithStyleableUsageRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool linkResources)
 		{
-			AssertHasDevices ();
-
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Styleable.Library"

@@ -14,7 +14,8 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice")]
-	public class DebuggingTest : DeviceTest {
+	public class DebuggingTest : DeviceTest
+	{
 		[TearDown]
 		public void ClearDebugProperties ()
 		{
@@ -49,7 +50,6 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("Node-3")]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
 		{
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
@@ -87,7 +87,6 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("Node-3")]
 		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
 		{
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var path = Path.Combine ("temp", TestName);
@@ -175,7 +174,6 @@ namespace Xamarin.Android.Build.Tests
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			SwitchUser ();
 
 			var path = Path.Combine (Root, "temp", TestName);
@@ -353,7 +351,6 @@ namespace ${ROOT_NAMESPACE} {
 		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType)
 		{
 			AssertCommercialBuild ();
-			AssertHasDevices ();
 			SwitchUser ();
 			WaitFor (5000);
 
